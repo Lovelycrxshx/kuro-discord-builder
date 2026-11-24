@@ -68,7 +68,14 @@ async function handleConfirmButton(interaction: ButtonInteraction, requestId: st
     return replyEphemeral(interaction, 'Only the server owner can confirm. No changes were made.');
   }
 
-  await interaction.showModal(buildConfirmationModal(request));
+  try {
+    await interaction.showModal(buildConfirmationModal(request));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    logger.error('apply.modal_open_failed', { guildId: guild.id, requestId, error: detail });
+    await replyEphemeral(interaction, `Could not open the confirmation dialog. No changes were made. (${detail})`);
+    return;
+  }
   logger.action('apply.confirmation_prompted', {
     guildId: guild.id,
     requestId,
@@ -127,12 +134,23 @@ async function handleModalSubmit(interaction: ModalSubmitInteraction): Promise<v
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const result = await applyPlan(guild, KURO_SERVER_PLAN, {
-    requestId,
-    actorId: request.requesterId,
-    ownerId: interaction.user.id,
-  });
-  await interaction.editReply({ embeds: [buildApplyResultEmbed(result)] });
+  try {
+    const result = await applyPlan(guild, KURO_SERVER_PLAN, {
+      requestId,
+      actorId: request.requesterId,
+      ownerId: interaction.user.id,
+    });
+    await interaction.editReply({ embeds: [buildApplyResultEmbed(result)] });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    logger.error('apply.failed', {
+      guildId: guild.id,
+      requestId,
+      ownerId: interaction.user.id,
+      error: detail,
+    });
+    await replyEphemeral(interaction, `Apply failed: ${detail}`);
+  }
 }
 
 async function handlePublishConfirmButton(interaction: ButtonInteraction, requestId: string): Promise<void> {
@@ -152,7 +170,14 @@ async function handlePublishConfirmButton(interaction: ButtonInteraction, reques
     return replyEphemeral(interaction, 'Only the server owner can publish. No messages were posted.');
   }
 
-  await interaction.showModal(buildPublishModal(request));
+  try {
+    await interaction.showModal(buildPublishModal(request));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    logger.error('publish.modal_open_failed', { guildId: guild.id, requestId, error: detail });
+    await replyEphemeral(interaction, `Could not open the publish dialog. No messages were posted. (${detail})`);
+    return;
+  }
   logger.action('publish.confirmation_prompted', {
     guildId: guild.id,
     requestId,
@@ -210,12 +235,23 @@ async function handlePublishModalSubmit(interaction: ModalSubmitInteraction): Pr
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const result = await publishContent(guild, {
-    requestId,
-    actorId: request.requesterId,
-    ownerId: interaction.user.id,
-  });
-  await interaction.editReply({ embeds: [buildPublishSummaryEmbed(result)] });
+  try {
+    const result = await publishContent(guild, {
+      requestId,
+      actorId: request.requesterId,
+      ownerId: interaction.user.id,
+    });
+    await interaction.editReply({ embeds: [buildPublishSummaryEmbed(result)] });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    logger.error('publish.failed', {
+      guildId: guild.id,
+      requestId,
+      ownerId: interaction.user.id,
+      error: detail,
+    });
+    await replyEphemeral(interaction, `Publish failed: ${detail}`);
+  }
 }
 
 export async function handleInteraction(interaction: Interaction): Promise<void> {

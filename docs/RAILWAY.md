@@ -74,6 +74,7 @@ That Discord error means the command was registered but no interaction response 
 4. **Verify build and start commands.** `railway.json` should build with `npm ci && npm run build` and start with `npm run start` (`node dist/index.js`). A stale or missing `dist/` prevents startup.
 5. **Re-register commands** with `npm run register` after changing command names/options. Do this once from your machine or with `railway run npm run register`.
 6. **Restart the service** after fixing variables. Updating a Railway variable triggers a restart, but a manual redeploy is fine too.
+7. **If `/apply` fails after typing `APPLY`**, read the error shown in Discord. It now reports the real cause, usually missing **Manage Roles** / **Manage Channels** or a bot role at/below `@everyone`. `/apply` also checks this before showing the confirmation buttons. Look for `apply.failed` in Runtime Logs for the same message.
 
 The app now exits non-zero when startup fails instead of keeping a false-healthy HTTP port open.
 

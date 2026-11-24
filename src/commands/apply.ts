@@ -9,6 +9,7 @@ import { logger } from '../logger.js';
 import { assertPlanIsLeastPrivilege, KURO_SERVER_PLAN } from '../plan/serverPlan.js';
 import { confirmations } from '../services/confirmationService.js';
 import { buildConfirmationMessage } from '../services/confirmationView.js';
+import { preflightGuild } from '../services/serverBuilder.js';
 import type { BotCommand } from './types.js';
 
 export const applyCommand: BotCommand = {
@@ -44,6 +45,24 @@ export const applyCommand: BotCommand = {
 
     assertPlanIsLeastPrivilege(KURO_SERVER_PLAN);
 
+    // Fail before asking for confirmation if the bot cannot actually apply.
+    let preflightWarnings: string[] = [];
+    try {
+      preflightWarnings = preflightGuild(guild);
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      logger.warn('apply.preflight_failed', {
+        guildId: guild.id,
+        userId: interaction.user.id,
+        error: detail,
+      });
+      await interaction.reply({
+        content: `Apply cannot run yet: ${detail}`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
     const existing = confirmations.getActiveForGuild(guild.id, 'apply');
     const request =
       existing ??
@@ -52,7 +71,9 @@ export const applyCommand: BotCommand = {
         guildId: guild.id,
         channelId: interaction.channelId,
         requesterId: interaction.user.id,
-        note: interaction.options.getString('note')?.trim() || undefined,
+        note:
+          [...preflightWarnings, interaction.options.getString('note')?.trim()].filter(Boolean).join('\n') ||
+          undefined,
       });
 
     const message = buildConfirmationMessage(request, KURO_SERVER_PLAN);
