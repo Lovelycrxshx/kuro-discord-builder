@@ -219,6 +219,14 @@ async function handlePublishModalSubmit(interaction: ModalSubmitInteraction): Pr
 }
 
 export async function handleInteraction(interaction: Interaction): Promise<void> {
+  logger.debug('interaction.received', {
+    type: interaction.type,
+    commandName: interaction.isChatInputCommand() ? interaction.commandName : undefined,
+    customId: interaction.isButton() || interaction.isModalSubmit() ? interaction.customId : undefined,
+    guildId: interaction.guildId ?? undefined,
+    userId: interaction.user.id,
+  });
+
   try {
     if (interaction.isChatInputCommand()) {
       const command = commandsByName[interaction.commandName];

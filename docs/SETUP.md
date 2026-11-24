@@ -98,6 +98,7 @@ Wait for the log line `bot.ready`, then test in your server:
 | Symptom | Fix |
 | --- | --- |
 | Slash commands do not appear | Set `DISCORD_GUILD_ID` to your test server ID and re-run `npm run register`; global commands can take up to an hour. |
+| `/plan` says "The application did not respond" | The bot process is not connected or a handler threw. Check for `bot.ready` and `interaction.failed` in logs; see the [Railway troubleshooting section](RAILWAY.md#5-troubleshooting-the-application-did-not-respond). |
 | `Bot is missing required permissions` | Re-invite with the exact permissions listed above, or grant them in Server Settings → Integrations → your bot. |
 | `Bot needs a role above @everyone` | Move the bot's role higher in Server Settings → Roles. |
 | `Missing required environment variable` | Check that `.env` exists next to `package.json` and has no extra spaces around the `=` signs. |

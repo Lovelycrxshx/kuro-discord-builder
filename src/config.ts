@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { isDiscordSnowflake, looksLikeDiscordBotToken } from './utils/configValidation.js';
 
 function readOptional(name: string): string | undefined {
   const value = process.env[name]?.trim();
@@ -19,20 +20,31 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error(`PORT must be an integer between 1 and 65535, received: ${rawPort}`);
 }
 
-const snowflakePattern = /^\d{17,20}$/;
 const guildId = readOptional('DISCORD_GUILD_ID');
 const logChannelId = readOptional('LOG_CHANNEL_ID');
 
-if (guildId && !snowflakePattern.test(guildId)) {
+if (guildId && !isDiscordSnowflake(guildId)) {
   throw new Error('DISCORD_GUILD_ID must be a Discord snowflake (17-20 digits) or blank.');
 }
-if (logChannelId && !snowflakePattern.test(logChannelId)) {
+if (logChannelId && !isDiscordSnowflake(logChannelId)) {
   throw new Error('LOG_CHANNEL_ID must be a Discord snowflake (17-20 digits) or blank.');
 }
 
+const token = readRequired('DISCORD_TOKEN');
+if (!looksLikeDiscordBotToken(token)) {
+  throw new Error(
+    'DISCORD_TOKEN does not look like a Discord bot token. Replace the placeholder or rotated token, then restart.',
+  );
+}
+
+const clientId = readRequired('DISCORD_CLIENT_ID');
+if (!isDiscordSnowflake(clientId)) {
+  throw new Error('DISCORD_CLIENT_ID must be a Discord application ID (17-20 digits).');
+}
+
 export const config = {
-  token: readRequired('DISCORD_TOKEN'),
-  clientId: readRequired('DISCORD_CLIENT_ID'),
+  token,
+  clientId,
   guildId,
   logChannelId,
   port,
