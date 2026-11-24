@@ -1,0 +1,27 @@
+{
+  "name": "kuro-discord-builder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Least-privilege Discord server builder for Kuro TV, ready for Railway.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "register": "tsx src/register-commands.ts",
+    "typecheck": "tsc --noEmit",
+    "check:plan": "tsx src/check-plan.ts"
+  },
+  "dependencies": {
+    "discord.js": "^14.28.1",
+    "dotenv": "^18.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
