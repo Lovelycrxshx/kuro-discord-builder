@@ -2,7 +2,7 @@
 
 A small, Railway-ready Discord server-builder bot for Kuro TV communities. Built with Node.js, TypeScript, and discord.js v14.
 
-> **Status:** code and documentation only. No bot token is included, nothing has been deployed, and no Discord server has been modified. No PR has been opened.
+> **Status:** code and documentation only. No bot token is included, nothing has been deployed, and no Discord server structure has been modified. PR #2 is open for review.
 
 ## What it does
 
@@ -10,10 +10,15 @@ A small, Railway-ready Discord server-builder bot for Kuro TV communities. Built
 | --- | --- | --- |
 | `/plan` | Everyone in the server | Ephemeral, preview-only layout: 3 embeds covering 9 categories, 38 channels, 12 roles, and the permission model, plus a machine-readable `kuro-server-plan.json` attachment. **No changes.** |
 | `/apply` | Members with Manage Server (owner always allowed) | Opens an owner-only confirmation flow. The server owner must press **Confirm as owner** and type `APPLY` in a modal before anything is created. |
-| `/publish-content` | Members with Manage Server (owner always allowed) | Previews five standard messages, then requires the owner's button and typed `PUBLISH`. Posts only to existing channels, skips missing ones, never edits/deletes, and skips duplicates on retry. See [PUBLISH-CONTENT.md](docs/PUBLISH-CONTENT.md). |
+| `/publish-content` | Members with Manage Server (owner always allowed) | Previews four starter messages (#welcome, #rules, #server-guide, #announcements), then requires the owner's button and typed `PUBLISH`. Rules are exactly 10 numbered items. Posts only to existing channels, skips missing ones, never edits/deletes, and skips duplicates on retry. See [PUBLISH-CONTENT.md](docs/PUBLISH-CONTENT.md). |
+| `/publish-release` | Members with Manage Server (owner always allowed) | Previews the latest **stable** GitHub release, then requires the owner's button and typed `PUBLISH`. Posts release notes to #release-notes and a separate APK/checksum post to #android-releases. See [RELEASE-POSTS.md](docs/RELEASE-POSTS.md). |
 | `/release-template version:1.5.5` | Everyone in the server | Ephemeral preview of the rich, verified Kuro 1.5.5 announcement. **Posts nothing.** Other versions render a generic template. |
 
 If a non-owner with Manage Server runs `/apply`, the confirmation message is posted in the current channel so the owner can actually see and press it; the owner is pinged. If the owner runs it, the confirmation stays ephemeral. Either way, the typed `APPLY` modal is owner-only.
+
+Additional behavior:
+- **Join welcomes:** on `guildMemberAdd`, one randomly chosen prewritten welcome is sent to an existing #welcome, mentioning only the new member. Optional `WELCOME_MENTION_USER_ID` adds one fixed staff mention. Requires the **Server Members** intent; Message Content and Presence intents stay off.
+- **Release monitoring:** stable, non-draft GitHub releases are polled from `Lovelycrxshx/Kuro-tv-Releases`. The first run only records a baseline and never auto-posts the already-existing latest release; use `/publish-release` for that. Duplicate markers prevent reposts after restarts.
 
 ## Current preset: v2.0.0
 
@@ -55,6 +60,7 @@ Custom links are rejected unless they point under the official repository over H
 
 - [Local setup](docs/SETUP.md)
 - [Content publishing command](docs/PUBLISH-CONTENT.md)
+- [Release posts and monitoring](docs/RELEASE-POSTS.md)
 - [Server preset v2.0.0](docs/SERVER-PRESET.md)
 - [Kuro 1.5.5 announcement](docs/KURO-1.5.5-ANNOUNCEMENT.md)
 - [Railway deployment](docs/RAILWAY.md)

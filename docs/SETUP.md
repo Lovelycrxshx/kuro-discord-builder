@@ -7,7 +7,11 @@
 - A Discord server you own, for testing
 - A Discord application/bot in the [Discord Developer Portal](https://discord.com/developers/applications)
 
-No privileged Gateway intents are needed. Leave **Message Content Intent**, **Presence Intent**, and **Server Members Intent** off — the bot only handles interactions.
+Enable **Server Members Intent** in both places:
+- In code: `src/index.ts` requests `GatewayIntentBits.GuildMembers`.
+- In the Developer Portal → Bot → Privileged Gateway Intents: turn **Server Members Intent** on.
+
+This is required to send a welcome message when a member joins. Leave **Message Content Intent** and **Presence Intent** off — this bot does not read message content or track presence.
 
 ## 2. Create the bot
 
@@ -63,6 +67,9 @@ DISCORD_TOKEN=replace_with_your_bot_token
 DISCORD_CLIENT_ID=replace_with_your_application_id
 DISCORD_GUILD_ID=replace_with_your_test_server_id
 LOG_CHANNEL_ID=
+WELCOME_MENTION_USER_ID=
+RELEASE_POLL_INTERVAL_MS=900000
+RELEASE_STATE_PATH=data/release-state.json
 PORT=3000
 ACTION_LOG_PATH=data/actions.jsonl
 ```
@@ -70,6 +77,10 @@ ACTION_LOG_PATH=data/actions.jsonl
 `DISCORD_GUILD_ID` is optional but recommended for local testing: it registers commands to one server instantly. Leave it blank to register global commands (Discord may cache those for up to an hour).
 
 `LOG_CHANNEL_ID` is optional. If set, the bot mirrors apply summaries to that channel; it needs View Channel, Send Messages, and Embed Links there.
+
+`WELCOME_MENTION_USER_ID` is optional and blank by default. When set to a fixed staff member's user ID, join welcomes mention that user alongside the new member; otherwise only the new member is mentioned.
+
+`RELEASE_POLL_INTERVAL_MS` and `RELEASE_STATE_PATH` control stable-release polling. The first run only records a baseline and does **not** auto-post the already-existing latest release; use `/publish-release` for that. See [RELEASE-POSTS.md](RELEASE-POSTS.md).
 
 ## 5. Install, check, register, run
 
@@ -91,7 +102,9 @@ Wait for the log line `bot.ready`, then test in your server:
 4. Review the result embed and the JSON lines in stdout / `data/actions.jsonl`.
 5. Run `/apply` a second time. Existing names are skipped, not duplicated or edited.
 6. `/release-template version:1.5.5` — confirm the rich 1.5.5 highlights, verified GitHub buttons, official `.sha256` link, and that nothing is posted. Add `highlights:` to override the preset.
-7. `/publish-content` — confirm five previews and the status of each target channel. As owner, press **Confirm as owner** and type `PUBLISH`. Run it again to verify already-posted messages are skipped. See [PUBLISH-CONTENT.md](PUBLISH-CONTENT.md).
+7. `/publish-content` — confirm **four** previews (#welcome, #rules, #server-guide, #announcements) and the status of each target channel. #rules must show exactly 10 numbered items. As owner, press **Confirm as owner** and type `PUBLISH`. Run it again to verify already-posted messages are skipped. See [PUBLISH-CONTENT.md](PUBLISH-CONTENT.md).
+8. `/publish-release` — preview the latest stable GitHub release. As owner, confirm and type `PUBLISH`; verify notes go to #release-notes and the APK/checksum post to #android-releases. See [RELEASE-POSTS.md](RELEASE-POSTS.md).
+9. Have a test account join the server. With Server Members Intent enabled, it receives one prewritten welcome in #welcome mentioning only that member (plus an optional configured staff member).
 
 ## Troubleshooting
 

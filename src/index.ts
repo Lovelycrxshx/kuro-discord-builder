@@ -1,11 +1,15 @@
 import http from 'node:http';
-import { Client, GatewayIntentBits } from 'discord.js';
+import { ChannelType, Client, GatewayIntentBits } from 'discord.js';
 import { config } from './config.js';
+import { buildWelcomeMessage } from './content/joinWelcomes.js';
 import { handleInteraction } from './interactions.js';
 import { logger } from './logger.js';
 import { confirmations } from './services/confirmationService.js';
+import { ReleaseMonitor } from './services/releasePosts.js';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Server Members is required for join welcomes. Message Content and Presence stay disabled.
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const releaseMonitor = new ReleaseMonitor(client);
 const startedAt = Date.now();
 let healthServer: http.Server | undefined;
 let readySince: number | undefined;
@@ -85,16 +89,61 @@ client.on('error', (error) => {
   logger.error('gateway.error', { error: error.message });
 });
 
+client.on('guildMemberAdd', async (member) => {
+  try {
+    const channel = member.guild.channels.cache.find(
+      (candidate) =>
+        candidate.type === ChannelType.GuildText && candidate.name.toLowerCase() === 'welcome',
+    );
+    if (!channel || !('send' in channel)) {
+      logger.warn('welcome.channel_missing', { guildId: member.guild.id, userId: member.id });
+      return;
+    }
+    const me = member.guild.members.me;
+    if (!me || !channel.permissionsFor(me)?.has(['ViewChannel', 'SendMessages'])) {
+      logger.warn('welcome.bot_no_access', { guildId: member.guild.id, userId: member.id });
+      return;
+    }
+
+    const welcome = buildWelcomeMessage(member.id, config.welcomeMentionUserId);
+    await channel.send({
+      content: welcome.content,
+      allowedMentions: { parse: [], users: welcome.mentionIds, repliedUser: false },
+    });
+    logger.action('welcome.sent', {
+      guildId: member.guild.id,
+      userId: member.id,
+      channelId: channel.id,
+      specialMention: Boolean(config.welcomeMentionUserId),
+    });
+  } catch (error) {
+    logger.error('welcome.failed', {
+      guildId: member.guild.id,
+      userId: member.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
 async function main(): Promise<void> {
   await startHealthServer();
   logger.info('health_server.listening', { port: config.port, path: '/health' });
   await client.login(config.token);
+
+  await releaseMonitor.start();
+  // First poll only establishes the baseline when no state exists; it never auto-posts an old release.
+  await releaseMonitor.poll();
 
   const interval = setInterval(() => {
     const removed = confirmations.prune();
     if (removed > 0) logger.debug('confirmations.pruned', { removed });
   }, 60_000);
   interval.unref();
+
+  const releaseInterval = setInterval(() => {
+    void releaseMonitor.poll();
+  }, config.releasePollIntervalMs);
+  releaseInterval.unref();
 }
 
 main().catch(async (error: unknown) => {

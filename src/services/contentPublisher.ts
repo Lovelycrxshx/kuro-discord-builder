@@ -17,7 +17,7 @@ import {
 import { logger } from '../logger.js';
 import { mirrorAudit } from './auditLog.js';
 
-const readOnlyRequired: ReadonlySet<ContentKey> = new Set(['announcements', 'androidReleases']);
+const readOnlyRequired: ReadonlySet<ContentKey> = new Set(['announcements']);
 
 export interface ResolvedContentTarget {
   item: ContentItem;

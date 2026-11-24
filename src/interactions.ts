@@ -1,4 +1,10 @@
-import { Interaction, MessageFlags, type ButtonInteraction, type ModalSubmitInteraction } from 'discord.js';
+import {
+  EmbedBuilder,
+  Interaction,
+  MessageFlags,
+  type ButtonInteraction,
+  type ModalSubmitInteraction,
+} from 'discord.js';
 import { commandsByName } from './commands/index.js';
 import { validPublishPhrase } from './content/publishContent.js';
 import { logger } from './logger.js';
@@ -23,6 +29,14 @@ import {
   PUBLISH_CONFIRM_PREFIX,
   PUBLISH_MODAL_PREFIX,
 } from './services/publishConfirmationView.js';
+import {
+  buildReleaseCancelledEmbed,
+  buildReleaseModal,
+  RELEASE_CANCEL_PREFIX,
+  RELEASE_CONFIRM_PREFIX,
+  RELEASE_MODAL_PREFIX,
+} from './services/releaseConfirmationView.js';
+import { publishLatestRelease } from './services/releasePosts.js';
 import { applyPlan, buildApplyResultEmbed } from './services/serverBuilder.js';
 
 async function replyEphemeral(interaction: Interaction, content: string): Promise<void> {
@@ -254,6 +268,91 @@ async function handlePublishModalSubmit(interaction: ModalSubmitInteraction): Pr
   }
 }
 
+async function handleReleaseConfirmButton(interaction: ButtonInteraction, requestId: string): Promise<void> {
+  const guild = interaction.guild;
+  if (!guild) return replyEphemeral(interaction, 'This can only be used in a server.');
+  const request = validRequest(interaction, requestId, 'release');
+  if (!request) return replyEphemeral(interaction, 'That release request is no longer valid or has expired.');
+  if (guild.ownerId !== interaction.user.id) {
+    logger.warn('release.confirmation.rejected_not_owner', {
+      guildId: guild.id,
+      requestId,
+      userId: interaction.user.id,
+      ownerId: guild.ownerId,
+    });
+    return replyEphemeral(interaction, 'Only the server owner can publish releases. Nothing was posted.');
+  }
+  try {
+    await interaction.showModal(buildReleaseModal(request));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    logger.error('release.modal_open_failed', { guildId: guild.id, requestId, error: detail });
+    await replyEphemeral(interaction, `Could not open the release dialog. Nothing was posted. (${detail})`);
+    return;
+  }
+  logger.action('release.confirmation_prompted', { guildId: guild.id, requestId, ownerId: interaction.user.id });
+}
+
+async function handleReleaseCancelButton(interaction: ButtonInteraction, requestId: string): Promise<void> {
+  const guild = interaction.guild;
+  if (!guild) return replyEphemeral(interaction, 'This can only be used in a server.');
+  const request = validRequest(interaction, requestId, 'release');
+  if (!request) return replyEphemeral(interaction, 'That release request is no longer valid or has expired.');
+  if (interaction.user.id !== request.requesterId && interaction.user.id !== guild.ownerId) {
+    return replyEphemeral(interaction, 'Only the requester or the server owner can cancel this request.');
+  }
+  if (!confirmations.cancel(requestId)) return replyEphemeral(interaction, 'That request was already closed.');
+  await interaction.update({ embeds: [buildReleaseCancelledEmbed(request)], components: [] });
+  logger.action('release.cancelled', { guildId: guild.id, requestId, userId: interaction.user.id });
+}
+
+async function handleReleaseModalSubmit(interaction: ModalSubmitInteraction): Promise<void> {
+  const requestId = interaction.customId.slice(RELEASE_MODAL_PREFIX.length);
+  const guild = interaction.guild;
+  if (!guild) return replyEphemeral(interaction, 'This can only be used in a server.');
+  const request = validRequest(interaction, requestId, 'release');
+  if (!request) return replyEphemeral(interaction, 'That release request is no longer valid or has expired.');
+  if (guild.ownerId !== interaction.user.id) {
+    logger.warn('release.modal.rejected_not_owner', { guildId: guild.id, requestId, userId: interaction.user.id });
+    return replyEphemeral(interaction, 'Only the server owner can publish releases. Nothing was posted.');
+  }
+  const typed = interaction.fields.getTextInputValue('release-confirmation');
+  if (!validPublishPhrase(typed)) {
+    logger.warn('release.modal.wrong_phrase', { guildId: guild.id, requestId });
+    return replyEphemeral(interaction, 'Confirmation text did not match `PUBLISH`. Nothing was posted.');
+  }
+  if (!confirmations.consume(requestId)) {
+    return replyEphemeral(interaction, 'This request was already used. Run /publish-release again.');
+  }
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  try {
+    const result = await publishLatestRelease(guild, {
+      requestId,
+      actorId: request.requesterId,
+      ownerId: interaction.user.id,
+    });
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Release posts complete')
+          .setColor(0x8b5cf6)
+          .setDescription(`Stable release \`${result.tag}\` processed.`)
+          .addFields(
+            { name: 'Published', value: result.published.join('\n') || 'None' },
+            { name: 'Skipped', value: result.skipped.join('\n') || 'None' },
+          )
+          .setFooter({ text: 'No messages were edited, deleted, or pinned; no @everyone ping.' })
+          .setTimestamp(),
+      ],
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    logger.error('release.publish_failed', { guildId: guild.id, requestId, error: detail });
+    await replyEphemeral(interaction, `Release publish failed: ${detail}`);
+  }
+}
+
 export async function handleInteraction(interaction: Interaction): Promise<void> {
   logger.debug('interaction.received', {
     type: interaction.type,
@@ -284,6 +383,10 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
         await handlePublishConfirmButton(interaction, customId.slice(PUBLISH_CONFIRM_PREFIX.length));
       } else if (customId.startsWith(PUBLISH_CANCEL_PREFIX)) {
         await handlePublishCancelButton(interaction, customId.slice(PUBLISH_CANCEL_PREFIX.length));
+      } else if (customId.startsWith(RELEASE_CONFIRM_PREFIX)) {
+        await handleReleaseConfirmButton(interaction, customId.slice(RELEASE_CONFIRM_PREFIX.length));
+      } else if (customId.startsWith(RELEASE_CANCEL_PREFIX)) {
+        await handleReleaseCancelButton(interaction, customId.slice(RELEASE_CANCEL_PREFIX.length));
       }
       return;
     }
@@ -293,6 +396,8 @@ export async function handleInteraction(interaction: Interaction): Promise<void>
         await handleModalSubmit(interaction);
       } else if (interaction.customId.startsWith(PUBLISH_MODAL_PREFIX)) {
         await handlePublishModalSubmit(interaction);
+      } else if (interaction.customId.startsWith(RELEASE_MODAL_PREFIX)) {
+        await handleReleaseModalSubmit(interaction);
       }
     }
   } catch (error) {

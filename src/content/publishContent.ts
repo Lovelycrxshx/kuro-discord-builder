@@ -3,7 +3,7 @@ import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
 export const PUBLISH_CONTENT_VERSION = '1.0.0';
 export const PUBLISH_CONFIRM_PHRASE = 'PUBLISH';
 
-export type ContentKey = 'welcome' | 'rules' | 'serverGuide' | 'announcements' | 'androidReleases';
+export type ContentKey = 'welcome' | 'rules' | 'serverGuide' | 'announcements';
 
 export interface ContentItem {
   key: ContentKey;
@@ -68,15 +68,18 @@ export const PUBLISH_CONTENT: readonly ContentItem[] = [
     channelName: 'rules',
     title: 'Community rules',
     content: [
-      'Thanks for helping keep this community welcoming and useful.',
+      'Thanks for helping keep this community welcoming and useful. Please follow these 10 rules:',
       '',
-      '• **Respect others.** No harassment, hate, spam, or personal attacks.',
-      '• **Mark spoilers.** Use spoiler tags or clear warnings for plot details.',
-      '• **No piracy or stream links.** Kuro is a player/front-end; it does not host media. Do not request or share copyrighted downloads, stream links, or source lists.',
-      '• **Use official APK links only.** Download from the GitHub Releases page linked in #android-releases.',
-      '• **Protect secrets and privacy.** Never post passwords, bot tokens, API keys, private URLs, or personal details — yours or anyone else’s.',
-      '• **Do not mass-mention members or roles.**',
-      '• **Keep posts on-topic.** Use #help and #bug-reports for support, and #release-discussion for release chat.',
+      '1. **Be respectful.** No harassment, hate, or personal attacks. Follow Discord’s Terms of Service.',
+      '2. **Use the correct channel.** Keep support in #help and #bug-reports, release chat in #release-discussion, and general chat in #general.',
+      '3. **No spam or scams.** Do not flood channels, advertise, or post misleading links and giveaways.',
+      '4. **No piracy or stream links.** Kuro TV is a player/front-end and does not host media. Do not request or share copyrighted downloads, stream links, or source lists.',
+      '5. **Use official APK links only.** Download from the GitHub Releases page linked in #android-releases.',
+      '6. **Protect credentials and privacy.** Never post passwords, tokens, API keys, private URLs, or personal details — yours or anyone else’s.',
+      '7. **Sanitize logs before sharing.** Remove tokens, IPs, usernames, file paths, and private URLs from screenshots and logcat output.',
+      '8. **Mark spoilers.** Use spoiler tags or a clear warning for plot details.',
+      '9. **Avoid unsolicited DMs.** Do not message members or moderators unless they invite the conversation.',
+      '10. **Follow moderator instructions.** No mass mentions; if staff ask you to change or remove a post, please do so promptly.',
     ].join('\n'),
   },
   {
@@ -107,35 +110,7 @@ export const PUBLISH_CONTENT: readonly ContentItem[] = [
       'For discussion, head to #release-discussion or #general. Official downloads and release notes always live in #android-releases and on the project’s GitHub Releases page.',
     ].join('\n'),
   },
-  {
-    key: 'androidReleases',
-    channelName: 'android-releases',
-    title: 'Kuro TV 1.5.5 for Android',
-    content: [
-      '**Kuro TV 1.5.5 (versionCode 107)** is available on GitHub Releases.',
-      '',
-      'Kuro is an open-source media player/front-end for Android TV, Fire TV, and mobile devices. It does not host, upload, or provide media streams; catalogue sources run locally on your device.',
-      '',
-      '**What is in 1.5.5** (from RELEASE-1.5.5.md):',
-      '• Interactive **Profile Art Studio** with a live 16:9 banner + avatar preview stage.',
-      '• Strict-CSP-safe profile pictures and banners rendered with native `<img>` elements.',
-      '• Streamlined YouTube-style Watch page: 5 servers per page, an “Other servers” pill, a 3-row episode playlist, and a horizontal “More anime” shelf.',
-      '• Cinematic Title Detail v2 with a watch-order strip, Canon / Filler / Recap badges, Skip Filler, and batch offline download.',
-      '• Smart multi-filter Browse with native voice search and compact SUB | DUB poster pills.',
-      '• Desktop left-rail and Android TV / Fire TV Leanback UI with DPAD focus navigation.',
-      '• Encrypted DNS (DoH), an 8-lane catalog engine, HLS fallback, and a multi-layer Player Ad-Guard.',
-      '• 40 anime & manga Profile Art sets, two-way AniList / MyAnimeList sync, and a Discord Rich Presence hub.',
-      '',
-      '**Install:** install over the top; same package `app.lovelycrxshx.kuro` and signing key, so profiles and downloads stay put. No uninstall needed.',
-      '**Verify:** compare the APK with the official SHA-256 companion file before installing.',
-      '',
-      '**Official links:**',
-      '• APK: https://github.com/Lovelycrxshx/Kuro-tv-Releases/releases/download/v1.5.5/Kuro-tv-1.5.5.apk',
-      '• Release notes: https://github.com/Lovelycrxshx/Kuro-tv-Releases/releases/tag/v1.5.5',
-      '• Download page: https://lovelycrxshx.github.io/Kuro-tv-Releases/',
-      '• SHA-256: https://github.com/Lovelycrxshx/Kuro-tv-Releases/releases/download/v1.5.5/Kuro-tv-1.5.5.apk.sha256',
-    ].join('\n'),
-  },
+
 ];
 
 /** Hidden-in-plain-sight idempotency marker stored in the embed footer. */

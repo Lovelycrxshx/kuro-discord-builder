@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 export type RequestStatus = 'pending' | 'consumed' | 'cancelled' | 'expired';
-export type RequestKind = 'apply' | 'publish';
+export type RequestKind = 'apply' | 'publish' | 'release';
 
 export interface PendingApplyRequest {
   id: string;

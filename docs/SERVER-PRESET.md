@@ -75,3 +75,4 @@ Discord will not let a bot create or assign roles at or above its own highest ro
 - `/apply` requires the server owner's button **and** typed `APPLY`.
 - Apply is additive: it creates only missing roles/categories/channels and never edits, renames, moves, or deletes existing resources.
 - Every action, skip, refusal, and warning is logged as structured JSON.
+- Content publishing, join welcomes, and release posts never change this structure; they only send messages to existing channels.

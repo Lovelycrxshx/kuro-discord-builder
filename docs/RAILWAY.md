@@ -23,10 +23,17 @@ In the Railway service → **Variables**, add:
 | `DISCORD_CLIENT_ID` | Yes | Discord application ID. |
 | `DISCORD_GUILD_ID` | No | Test server ID to register commands only there. Leave unset for global commands. |
 | `LOG_CHANNEL_ID` | No | Private audit channel ID. Leave unset to disable Discord mirroring. |
+| `WELCOME_MENTION_USER_ID` | No | Fixed staff user ID to mention in join welcomes. Leave unset to mention only the new member. |
+| `RELEASE_POLL_INTERVAL_MS` | No | Default `900000` (15 min); minimum `60000`. |
+| `RELEASE_STATE_PATH` | No | Default `data/release-state.json`. Ephemeral; a missing file causes a fresh baseline, never an automatic old-release post. |
 | `PORT` | No | Railway injects this automatically; the app defaults to `3000` locally. |
 | `ACTION_LOG_PATH` | No | Defaults to `data/actions.jsonl`. Railway's filesystem is ephemeral — stdout is the durable log. |
 
 Use `.env.example` as the placeholder reference only. Never put real values in a committed file.
+
+Enable **Server Members Intent** in the Discord Developer Portal; join welcomes will not fire without it. Do **not** enable Message Content or Presence intents. See [SETUP.md](SETUP.md#1-prerequisites).
+
+On first startup the release monitor only records the current stable tag as a baseline; it does not post the already-existing latest release. Use `/publish-release` for that. See [RELEASE-POSTS.md](RELEASE-POSTS.md).
 
 ## 3. Register slash commands once
 

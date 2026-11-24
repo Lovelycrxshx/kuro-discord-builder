@@ -22,12 +22,22 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 
 const guildId = readOptional('DISCORD_GUILD_ID');
 const logChannelId = readOptional('LOG_CHANNEL_ID');
+const welcomeMentionUserId = readOptional('WELCOME_MENTION_USER_ID');
 
 if (guildId && !isDiscordSnowflake(guildId)) {
   throw new Error('DISCORD_GUILD_ID must be a Discord snowflake (17-20 digits) or blank.');
 }
 if (logChannelId && !isDiscordSnowflake(logChannelId)) {
   throw new Error('LOG_CHANNEL_ID must be a Discord snowflake (17-20 digits) or blank.');
+}
+if (welcomeMentionUserId && !isDiscordSnowflake(welcomeMentionUserId)) {
+  throw new Error('WELCOME_MENTION_USER_ID must be a Discord user ID (17-20 digits) or blank.');
+}
+
+const rawReleasePollInterval = readOptional('RELEASE_POLL_INTERVAL_MS') ?? '900000';
+const releasePollIntervalMs = Number(rawReleasePollInterval);
+if (!Number.isInteger(releasePollIntervalMs) || releasePollIntervalMs < 60_000) {
+  throw new Error('RELEASE_POLL_INTERVAL_MS must be an integer of at least 60000 milliseconds.');
 }
 
 const token = readRequired('DISCORD_TOKEN');
@@ -47,8 +57,11 @@ export const config = {
   clientId,
   guildId,
   logChannelId,
+  welcomeMentionUserId,
   port,
   actionLogPath: readOptional('ACTION_LOG_PATH') ?? 'data/actions.jsonl',
+  releasePollIntervalMs,
+  releaseStatePath: readOptional('RELEASE_STATE_PATH') ?? 'data/release-state.json',
 } as const;
 
 export type Config = typeof config;
