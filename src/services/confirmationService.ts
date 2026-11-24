@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
 export type RequestStatus = 'pending' | 'consumed' | 'cancelled' | 'expired';
+export type RequestKind = 'apply' | 'publish';
 
 export interface PendingApplyRequest {
   id: string;
+  kind: RequestKind;
   guildId: string;
   channelId: string;
   requesterId: string;
@@ -15,10 +17,11 @@ export interface PendingApplyRequest {
 
 export const CONFIRMATION_TTL_MS = 10 * 60 * 1000;
 
-class ConfirmationService {
+export class ConfirmationService {
   private readonly requests = new Map<string, PendingApplyRequest>();
 
   create(input: {
+    kind: RequestKind;
     guildId: string;
     channelId: string;
     requesterId: string;
@@ -27,6 +30,7 @@ class ConfirmationService {
     const now = Date.now();
     const request: PendingApplyRequest = {
       id: randomUUID(),
+      kind: input.kind,
       guildId: input.guildId,
       channelId: input.channelId,
       requesterId: input.requesterId,
@@ -48,9 +52,13 @@ class ConfirmationService {
     return request;
   }
 
-  getActiveForGuild(guildId: string): PendingApplyRequest | undefined {
+  getActiveForGuild(guildId: string, kind: RequestKind): PendingApplyRequest | undefined {
     for (const request of this.requests.values()) {
-      if (request.guildId === guildId && this.get(request.id)?.status === 'pending') {
+      if (
+        request.guildId === guildId &&
+        request.kind === kind &&
+        this.get(request.id)?.status === 'pending'
+      ) {
         return request;
       }
     }

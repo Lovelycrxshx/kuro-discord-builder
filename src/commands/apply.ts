@@ -44,10 +44,11 @@ export const applyCommand: BotCommand = {
 
     assertPlanIsLeastPrivilege(KURO_SERVER_PLAN);
 
-    const existing = confirmations.getActiveForGuild(guild.id);
+    const existing = confirmations.getActiveForGuild(guild.id, 'apply');
     const request =
       existing ??
       confirmations.create({
+        kind: 'apply',
         guildId: guild.id,
         channelId: interaction.channelId,
         requesterId: interaction.user.id,

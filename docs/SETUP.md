@@ -91,6 +91,7 @@ Wait for the log line `bot.ready`, then test in your server:
 4. Review the result embed and the JSON lines in stdout / `data/actions.jsonl`.
 5. Run `/apply` a second time. Existing names are skipped, not duplicated or edited.
 6. `/release-template version:1.5.5` — confirm the rich 1.5.5 highlights, verified GitHub buttons, official `.sha256` link, and that nothing is posted. Add `highlights:` to override the preset.
+7. `/publish-content` — confirm five previews and the status of each target channel. As owner, press **Confirm as owner** and type `PUBLISH`. Run it again to verify already-posted messages are skipped. See [PUBLISH-CONTENT.md](PUBLISH-CONTENT.md).
 
 ## Troubleshooting
 

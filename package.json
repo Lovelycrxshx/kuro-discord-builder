@@ -12,6 +12,7 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "register": "tsx src/register-commands.ts",
+    "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "check:plan": "tsx src/check-plan.ts"
   },

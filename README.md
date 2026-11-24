@@ -10,6 +10,7 @@ A small, Railway-ready Discord server-builder bot for Kuro TV communities. Built
 | --- | --- | --- |
 | `/plan` | Everyone in the server | Ephemeral, preview-only layout: 3 embeds covering 9 categories, 38 channels, 12 roles, and the permission model, plus a machine-readable `kuro-server-plan.json` attachment. **No changes.** |
 | `/apply` | Members with Manage Server (owner always allowed) | Opens an owner-only confirmation flow. The server owner must press **Confirm as owner** and type `APPLY` in a modal before anything is created. |
+| `/publish-content` | Members with Manage Server (owner always allowed) | Previews five standard messages, then requires the owner's button and typed `PUBLISH`. Posts only to existing channels, skips missing ones, never edits/deletes, and skips duplicates on retry. See [PUBLISH-CONTENT.md](docs/PUBLISH-CONTENT.md). |
 | `/release-template version:1.5.5` | Everyone in the server | Ephemeral preview of the rich, verified Kuro 1.5.5 announcement. **Posts nothing.** Other versions render a generic template. |
 
 If a non-owner with Manage Server runs `/apply`, the confirmation message is posted in the current channel so the owner can actually see and press it; the owner is pinged. If the owner runs it, the confirmation stays ephemeral. Either way, the typed `APPLY` modal is owner-only.
@@ -26,7 +27,7 @@ Roles: Kuro Admin, Moderator, Support Helper, Developer, Contributor, Beta Teste
 
 ## Safety model
 
-- **Preview-only / owner-confirmed / additive-only.** `/plan` changes nothing. `/apply` alone changes nothing: the button only works for `guild.ownerId`, the typed `APPLY` must match exactly, requests expire after 10 minutes, and they cannot be replayed. Apply only creates missing resources; it never edits, renames, moves, or deletes anything.
+- **Preview-only / owner-confirmed / additive-only.** `/plan` changes nothing. `/apply` and `/publish-content` alone change nothing: the button only works for `guild.ownerId`, the typed `APPLY`/`PUBLISH` must match exactly, requests expire after 10 minutes, and they cannot be replayed. Apply creates only missing resources; publishing only sends new marked messages. Nothing is edited, renamed, moved, pinned, or deleted.
 - **Fail-closed permissions.** `assertPlanIsLeastPrivilege()` rejects Administrator, Manage Guild, Manage Roles, Manage Channels, Kick/Ban, Mention Everyone, and other management permissions before any API call. `npm run check:plan` enforces the same rules in CI.
 - **Bot runtime permissions are separate from generated-role permissions.** The bot requests only Manage Channels, Manage Roles, View Channel, Send Messages, Embed Links, Read Message History, and Add Reactions. It must never request Administrator, Kick/Ban, Manage Guild, or Mention Everyone. Generated roles never receive Manage Channels or Manage Roles — including the honorary "Kuro Admin" role, which has no Administrator rights.
 - **Role hierarchy is required.** The bot role must sit above `@everyone` and above every role it creates or reuses. If its highest role is `@everyone`, `/apply` refuses to start. See [SETUP.md](docs/SETUP.md#3-invite-with-minimum-permissions).
@@ -53,6 +54,7 @@ Custom links are rejected unless they point under the official repository over H
 ## Documentation
 
 - [Local setup](docs/SETUP.md)
+- [Content publishing command](docs/PUBLISH-CONTENT.md)
 - [Server preset v2.0.0](docs/SERVER-PRESET.md)
 - [Kuro 1.5.5 announcement](docs/KURO-1.5.5-ANNOUNCEMENT.md)
 - [Railway deployment](docs/RAILWAY.md)
